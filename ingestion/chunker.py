@@ -1,26 +1,74 @@
 """
 input:
-- text: 清洗后的文本
+- file_path: 文档路径（支持 PDF/Word/TXT）
 - chunk_size: 每个块的最大 token 数
 - chunk_overlap: 块之间的重叠 token 数
 - metadata: 文档元信息（来源、作者等）
+- strategy: 切片策略 ("basic" 或 "semantic")
 
 output:
 - List[RawDocument]: 分块后的文档列表，包含元信息及父文档关联
 
 pos:
-- 位于 ingestion 层
-- 负责文本分块，保留来源信息，支持语义切分
+- 位于 ingestion 层对外唯一入口
+- 负责文档解析 + 文本分块，保留来源信息
 
 声明：
 - 一旦本文件逻辑更新
 - 必须同步更新本文件注释
 - 并更新所属目录的 README.md
 """
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Literal
 from core.schema import RawDocument
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import re
+
+from ingestion.parser import parse
+
+
+def chunk(
+    file_path: str,
+    chunk_size: int = 512,
+    chunk_overlap: int = 50,
+    metadata: Optional[Dict[str, Any]] = None,
+    strategy: Literal["basic", "semantic"] = "basic"
+) -> List[RawDocument]:
+    """
+    统一切片入口：解析文档 + 切片
+    
+    Args:
+        file_path: 文档路径
+        chunk_size: 每个块的最大字符数
+        chunk_overlap: 块之间的重叠字符数
+        metadata: 文档元信息
+        strategy: 切片策略 "basic" 或 "semantic"
+    
+    Returns:
+        分块后的 RawDocument 列表
+    """
+    doc = parse(file_path)
+    
+    merged_metadata = doc.metadata.copy()
+    if metadata:
+        merged_metadata.update(metadata)
+    
+    if strategy == "semantic":
+        return semantic_chunk_text(
+            text=doc.content,
+            max_chunk_size=chunk_size,
+            metadata=merged_metadata,
+            source=file_path,
+            parent_id=doc.id
+        )
+    else:
+        return chunk_text(
+            text=doc.content,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            metadata=merged_metadata,
+            source=file_path,
+            parent_id=doc.id
+        )
 
 
 def clean_text_for_chunking(text: str) -> str:

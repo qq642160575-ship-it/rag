@@ -19,7 +19,8 @@ from ingestion.chunker import (
     clean_text_for_chunking,
     chunk_text,
     chunk_documents,
-    semantic_chunk_text
+    semantic_chunk_text,
+    chunk
 )
 
 
@@ -245,6 +246,59 @@ class TestIntegration(unittest.TestCase):
             self.assertIn("total_chunks", chunk.metadata)
             self.assertIn("chunk_size", chunk.metadata)
             self.assertGreater(len(chunk.content), 0)
+
+
+class TestChunk(unittest.TestCase):
+    
+    def test_chunk_basic_strategy(self):
+        import tempfile
+        import os
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+            f.write("Test content. " * 50)
+            temp_path = f.name
+        
+        try:
+            chunks = chunk(temp_path, chunk_size=100, chunk_overlap=20, strategy="basic")
+            self.assertGreater(len(chunks), 0)
+            for c in chunks:
+                self.assertIsInstance(c, RawDocument)
+                self.assertIn("source", c.metadata)
+        finally:
+            os.unlink(temp_path)
+    
+    def test_chunk_semantic_strategy(self):
+        import tempfile
+        import os
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+            f.write("Paragraph one.\n\nParagraph two.\n\nParagraph three.")
+            temp_path = f.name
+        
+        try:
+            chunks = chunk(temp_path, chunk_size=50, strategy="semantic")
+            self.assertGreater(len(chunks), 0)
+            for c in chunks:
+                self.assertEqual(c.metadata["chunking_strategy"], "semantic")
+        finally:
+            os.unlink(temp_path)
+    
+    def test_chunk_with_metadata(self):
+        import tempfile
+        import os
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+            f.write("Test content for metadata.")
+            temp_path = f.name
+        
+        try:
+            custom_metadata = {"author": "Test Author", "category": "Test"}
+            chunks = chunk(temp_path, metadata=custom_metadata)
+            self.assertEqual(len(chunks), 1)
+            self.assertEqual(chunks[0].metadata["author"], "Test Author")
+            self.assertEqual(chunks[0].metadata["category"], "Test")
+        finally:
+            os.unlink(temp_path)
 
 
 if __name__ == '__main__':

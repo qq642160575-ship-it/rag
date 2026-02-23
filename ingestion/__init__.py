@@ -1,3 +1,3 @@
-from ingestion.parser import parse
+from ingestion.chunker import chunk
 
-__all__ = ["parse"]
+__all__ = ["chunk"]
