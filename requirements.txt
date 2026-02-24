@@ -2,5 +2,8 @@ python-dotenv
 openai
 faiss-cpu
 langchain
+fastapi
+uvicorn
+python-multipart
 pydantic
 langchain-community

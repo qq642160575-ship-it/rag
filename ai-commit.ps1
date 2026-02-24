@@ -16,20 +16,20 @@ $ApiUrl = "https://api.siliconflow.cn/v1/chat/completions"
 # ================== 3. 环境检查 ==================
 $null = git rev-parse --is-inside-work-tree 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ 当前目录不是 git 仓库" -ForegroundColor Red
+    Write-Host "当前目录不是 git 仓库" -ForegroundColor Red
     exit 1
 }
 
 $ApiKey = $env:SILICONFLOW_API_KEY
 if ([string]::IsNullOrWhiteSpace($ApiKey)) {
-    Write-Host "❌ 未设置 SILICONFLOW_API_KEY 环境变量" -ForegroundColor Red
+    Write-Host "未设置 SILICONFLOW_API_KEY 环境变量" -ForegroundColor Red
     exit 1
 }
 
 # 获取暂存区改动
 $Diff = git diff --cached
 if ([string]::IsNullOrWhiteSpace($Diff)) {
-    Write-Host "⚠️ 没有 staged 的改动，请先执行 git add" -ForegroundColor Yellow
+    Write-Host "没有 staged 的改动，请先执行 git add" -ForegroundColor Yellow
     exit 1
 }
 
@@ -43,7 +43,7 @@ if ([string]::IsNullOrWhiteSpace($ErpId)) {
 }
 
 if ($Strict -and [string]::IsNullOrWhiteSpace($ErpId)) {
-    Write-Host "❌ strict 模式下未找到 erp#ID" -ForegroundColor Red
+    Write-Host "strict 模式下未找到 erp#ID" -ForegroundColor Red
     exit 1
 }
 
@@ -68,7 +68,7 @@ $Prefix
 $Diff
 "@
 
-Write-Host "🤖 AI 正在生成 commit message..." -ForegroundColor Cyan
+Write-Host "AI 正在生成 commit message..." -ForegroundColor Cyan
 
 # ================== 6. API 请求（高保真传输） ==================
 $Headers = @{
@@ -94,7 +94,7 @@ try {
     # 二次过滤：防止 AI 仍然返回了 ```commit 这种 Markdown 格式
     $Result = $Result -replace '^```\w*\s*', '' -replace '\s*```$', ''
 } catch {
-    Write-Host "❌ 调用 API 失败: $_" -ForegroundColor Red
+    Write-Host "调用 API 失败: $_" -ForegroundColor Red
     exit 1
 }
 
@@ -103,15 +103,15 @@ Write-Host $Result -ForegroundColor Green
 Write-Host "----------------------------------" -ForegroundColor DarkGray
 
 if ([string]::IsNullOrWhiteSpace($Result)) {
-    Write-Host "❌ AI 未生成有效的消息" -ForegroundColor Red
+    Write-Host "AI 未生成有效的消息" -ForegroundColor Red
     exit 1
 }
 
 # ================== 7. 交互提交 ==================
-$Confirm = Read-Host "💡 使用这个 commit message？ [Y/n]"
+$Confirm = Read-Host "使用这个 commit message？ [Y/n]"
 if ([string]::IsNullOrWhiteSpace($Confirm) -or $Confirm -match "^[Yy]$") {
     git commit -m "$Result"
-    Write-Host "✅ Commit 完成" -ForegroundColor Green
+    Write-Host "Commit 完成" -ForegroundColor Green
 } else {
-    Write-Host "🚫 已取消 commit" -ForegroundColor Yellow
+    Write-Host "已取消 commit" -ForegroundColor Yellow
 }
