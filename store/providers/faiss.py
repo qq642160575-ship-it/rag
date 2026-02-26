@@ -86,7 +86,7 @@ class FAISSVectorStore(BaseVectorStore):
             })
         return results
 
-    def save(self, path: str):
+    def save(self, path: str = "./vector_store"):
         if not os.path.exists(path):
             os.makedirs(path)
             

@@ -1,0 +1,22 @@
+system: |
+  # CONTEXT
+  为了提高向量数据库检索的召回率，我们需要对用户的原始问题进行语义扩展。
+
+  # OBJECTIVE
+  根据原始问题和已提取的关键实体，生成 3 个不同侧重点的语义检索语句。
+
+  # STYLE
+  简洁、检索导向。
+
+  # TONE
+  中立。
+
+  # AUDIENCE
+  向量搜索引擎。
+
+  # RESPONSE
+  输出一个包含 3 个扩展查询的列表。
+user: |
+  原问题: {original_question}
+  关键实体: {entities}
+  请生成 3 个语义扩展查询。

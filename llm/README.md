@@ -14,6 +14,9 @@
     - `openai.py`: OpenAI 客户端实现（基于 LangChain）。
     - `anthropic.py`: Anthropic 客户端实现（基于 LangChain）。
     - `gemini.py`: Google Gemini 客户端实现（基于 LangChain）。
+- `prompts/`: 系统与用户提示词模板管理。
+    - `manager.py`: `PromptManager` 实现类。
+    - `{node_name}.yaml`: 各个任务节点的提示词配置文件。
 
 ## 使用
 
@@ -54,6 +57,19 @@ def my_node(state):
     # 可以直接使用 handler.invoke (兼容底层 invoke)
     result = handler.invoke(f"处理问题: {state['query']}")
     return {"response": result.content}
+```
+
+### 4. 提示词管理 (Prompt Management)
+使用 `PromptManager` 加载 YAML 格式的提示词模板，支持系统和用户提示词的参数填充。
+
+```python
+from llm.prompts.manager import PromptManager
+
+pm = PromptManager("./llm/prompts")
+messages = pm.get_langchain_messages("intent", original_question="什么是RAG？")
+
+# messages 会包含根据 intent.yaml 渲染出的 SystemMessage 和 HumanMessage
+response = handler.invoke(messages)
 ```
 
 > 声明：

@@ -1,13 +1,15 @@
-from typing import Any, Dict, Type
-from llm.base import BaseLLMHandler
-from llm.providers import AnthropicHandler, OpenAIHandler, GeminiHandler
-
 # 供应商映射
-PROVIDER_MAP: Dict[str, Type[BaseLLMHandler]] = {
-    "openai": OpenAIHandler,
-    "anthropic": AnthropicHandler,
-    "gemini": GeminiHandler,
+_PROVIDER_CLASSES: Dict[str, str] = {
+    "openai": "llm.providers.OpenAIHandler",
+    "anthropic": "llm.providers.AnthropicHandler",
+    "gemini": "llm.providers.GeminiHandler",
 }
+
+def _get_class(path: str):
+    import importlib
+    module_path, class_name = path.rsplit(".", 1)
+    module = importlib.import_module(module_path)
+    return getattr(module, class_name)
 
 def get_llm(provider: str, model_name: str, **kwargs: Any) -> BaseLLMHandler:
     """
@@ -21,8 +23,9 @@ def get_llm(provider: str, model_name: str, **kwargs: Any) -> BaseLLMHandler:
     Returns:
         相应的 BaseLLMHandler 子类实例
     """
-    handler_class = PROVIDER_MAP.get(provider.lower())
-    if not handler_class:
-        raise ValueError(f"不支持的 LLM 供应商: {provider}. 可选: {list(PROVIDER_MAP.keys())}")
+    provider_path = _PROVIDER_CLASSES.get(provider.lower())
+    if not provider_path:
+        raise ValueError(f"不支持的 LLM 供应商: {provider}. 可选: {list(_PROVIDER_CLASSES.keys())}")
     
+    handler_class = _get_class(provider_path)
     return handler_class(model_name=model_name, **kwargs)
