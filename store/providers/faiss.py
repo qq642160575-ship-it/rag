@@ -17,27 +17,26 @@ pos:
 - 并更新所属目录的 README.md
 """
 import os
-import numpy as np
-import faiss
-import pickle
+import shutil
 from typing import List, Dict, Any, Optional
 from store.base import BaseVectorStore
+from langchain_community.vectorstores import FAISS
+from langchain_core.embeddings import Embeddings
+
+
+class FakeEmbeddings(Embeddings):
+    """一个不执行任何操作的嵌入类，因为我们直接传入向量"""
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        return []
+    def embed_query(self, text: str) -> List[float]:
+        return []
 
 
 class FAISSVectorStore(BaseVectorStore):
     def __init__(self, dimension: Optional[int] = None):
         self.dimension = dimension
-        self.index = None
-        self.documents = []
-        self.metadatas = []
-        
-        if dimension:
-            self.index = faiss.IndexFlatL2(dimension)
-
-    def _init_index(self, dimension: int):
-        if self.index is None:
-            self.dimension = dimension
-            self.index = faiss.IndexFlatL2(dimension)
+        self.vector_store: Optional[FAISS] = None
+        self.embeddings = FakeEmbeddings()
 
     def add(
         self, 
@@ -49,59 +48,57 @@ class FAISSVectorStore(BaseVectorStore):
         if not texts or not vectors:
             return []
             
-        vectors_np = np.array(vectors).astype('float32')
-        self._init_index(vectors_np.shape[1])
+        # 构造文本与向量的对应关系
+        text_embeddings = list(zip(texts, vectors))
         
-        self.index.add(vectors_np)
-        self.documents.extend(texts)
-        if metadatas:
-            self.metadatas.extend(metadatas)
+        if self.vector_store is None:
+            self.vector_store = FAISS.from_embeddings(
+                text_embeddings=text_embeddings,
+                embedding=self.embeddings,
+                metadatas=metadatas
+            )
         else:
-            self.metadatas.extend([{} for _ in texts])
+            self.vector_store.add_embeddings(
+                text_embeddings=text_embeddings,
+                metadatas=metadatas
+            )
             
-        # 返回索引范围作为简单 ID
-        start_idx = len(self.documents) - len(texts)
-        return [str(i) for i in range(start_idx, len(self.documents))]
+        return [str(i) for i in range(len(texts))]
 
     def search(
         self, 
         query_vector: List[float], 
         top_k: int = 5, 
+        filter: Optional[Dict[str, Any]] = None,
         **kwargs
     ) -> List[Dict[str, Any]]:
-        if self.index is None:
+        if self.vector_store is None:
             return []
             
-        query_np = np.array([query_vector]).astype('float32')
-        distances, indices = self.index.search(query_np, top_k)
+        # 使用 LangChain 的 similarity_search_by_vector
+        # 它支持 filter 参数进行元数据过滤
+        docs_with_score = self.vector_store.similarity_search_by_vector(
+            embedding=query_vector,
+            k=top_k,
+            filter=filter
+        )
         
         results = []
-        for i, idx in enumerate(indices[0]):
-            if idx == -1 or idx >= len(self.documents):
-                continue
+        for doc in docs_with_score:
             results.append({
-                "text": self.documents[idx],
-                "score": float(distances[0][i]),
-                "metadata": self.metadatas[idx] if idx < len(self.metadatas) else {}
+                "text": doc.page_content,
+                "score": 0.0,  # LangChain 的这个接口某些版本不直接返回分数，如果需要分数可用 similarity_search_with_score_by_vector
+                "metadata": doc.metadata
             })
         return results
 
     def save(self, path: str = "./vector_store"):
-        if not os.path.exists(path):
-            os.makedirs(path)
-            
-        faiss.write_index(self.index, os.path.join(path, "index.faiss"))
-        with open(os.path.join(path, "data.pkl"), "wb") as f:
-            pickle.dump({
-                "documents": self.documents,
-                "metadatas": self.metadatas,
-                "dimension": self.dimension
-            }, f)
+        if self.vector_store:
+            self.vector_store.save_local(path)
 
     def load(self, path: str):
-        self.index = faiss.read_index(os.path.join(path, "index.faiss"))
-        with open(os.path.join(path, "data.pkl"), "rb") as f:
-            data = pickle.load(f)
-            self.documents = data["documents"]
-            self.metadatas = data["metadatas"]
-            self.dimension = data["dimension"]
+        self.vector_store = FAISS.load_local(
+            path, 
+            self.embeddings, 
+            allow_dangerous_deserialization=True
+        )

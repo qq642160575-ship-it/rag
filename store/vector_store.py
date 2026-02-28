@@ -26,7 +26,11 @@ _instances = {}
 
 
 def get_store(provider: str = "faiss", **kwargs):
-    """获取或创建一个存储实例"""
+    """
+    获取或创建一个存储实例。
+    注意：这里的 kwargs 应该是初始化参数（如 dimension）。
+    """
+    # 过滤掉非初始化参数（可选，但目前为了兼容性，我们通过 key 来区分）
     instance_key = f"{provider}_{str(kwargs)}"
     if instance_key not in _instances:
         _instances[instance_key] = VectorStoreFactory.get_vector_store(provider, **kwargs)
@@ -41,8 +45,9 @@ def add(
     **kwargs
 ) -> List[str]:
     """快捷添加接口"""
-    store = get_store(provider, **kwargs)
-    return store.add(texts, vectors, metadatas)
+    # 实例化时不带 runtime 参数
+    store = get_store(provider)
+    return store.add(texts, vectors, metadatas, **kwargs)
 
 
 def search(
@@ -52,8 +57,9 @@ def search(
     **kwargs
 ) -> List[Dict[str, Any]]:
     """快捷检索接口"""
-    store = get_store(provider, **kwargs)
-    return store.search(query_vector, top_k)
+    # 核心修正：get_store 不要拿走包含 filter 的 kwargs
+    store = get_store(provider)
+    return store.search(query_vector, top_k, **kwargs)
 
 
 def save(path: str, provider: str = "faiss", **kwargs):

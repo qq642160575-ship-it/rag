@@ -25,6 +25,7 @@
 > 一旦本目录结构或职责发生变化，请同步更新本文件
 
 ## 快速使用
+
 ```python
 from store import vector_store
 
