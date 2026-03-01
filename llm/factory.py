@@ -1,4 +1,8 @@
 # 供应商映射
+from typing import Any, Dict
+
+from llm.base import BaseLLMHandler
+
 _PROVIDER_CLASSES: Dict[str, str] = {
     "openai": "llm.providers.OpenAIHandler",
     "anthropic": "llm.providers.AnthropicHandler",

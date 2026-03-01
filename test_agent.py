@@ -1,7 +1,7 @@
 import os
 from unittest.mock import MagicMock
 from langchain_core.documents import Document
-from agent.structured_rag import StructuredRAGAgent
+from agent.main import StructuredRAGAgent
 from dotenv import load_dotenv
 
 load_dotenv()

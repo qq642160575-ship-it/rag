@@ -3,6 +3,8 @@ from typing import TypedDict, List, Literal, Dict, Any
 from pydantic import BaseModel
 from langgraph.graph import StateGraph, END
 from langchain_core.documents import Document
+
+from agent.core.intent import IntentOutput
 from llm.base import BaseLLMHandler
 from llm.prompts.manager import PromptManager
 from store.base import BaseVectorStore
@@ -12,9 +14,6 @@ from store.base import BaseVectorStore
 # 强类型输出定义 (Pydantic Models)
 # =========================
 
-class IntentOutput(BaseModel):
-    task_type: str
-    entities: List[str]
 
 
 class ExpandOutput(BaseModel):

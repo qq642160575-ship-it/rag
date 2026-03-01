@@ -1,6 +1,12 @@
-# StructuredRAGAgent 深度解析文档
+# StructuredRAG Agent 架构深度解析
 
-本文档旨在详细解释 `agent/structured_rag.py` 中实现的生产级 RAG（检索增强生成）流程。该架构基于 LangGraph 构建，采用了多步推理和自我修正机制。
+本文档旨在详细解释 `agent/` 目录下实现的生产级 RAG（检索增强生成）流程。该架构基于 LangGraph 构建，采用了多步推理和自我修正机制，并进行了模块化拆分。
+
+## 目录结构
+- `main.py`: Agent 总入口与图组装。
+- `nodes/`: 包含所有具体的动作节点（Intent, Expand, Retrieval, Rerank, Judge, Rewrite, Answer）。
+- `output_class/`: 包含所有的状态定义与结构化输出模型。
+
 
 ---
 
@@ -10,15 +16,14 @@
 graph TD
     Start((开始)) --> Intent[1. 意图分析 Intent]
     Intent --> Expand[2. 查询扩展 Expand]
-    Expand --> Dense[3. 向量检索 Dense]
-    Dense --> Merge[4. 合并去重 Merge]
-    Merge --> Rerank[5. 重排序 Rerank]
-    Rerank --> Judge[6. 召回判定 Judge]
+    Expand --> Retrieval[3. 向量检索与合并 Retrieval]
+    Retrieval --> Rerank[4. 重排序 Rerank]
+    Rerank --> Judge[5. 召回判定 Judge]
     
-    Judge -- 足够 --> Answer[8. 生成回答 Answer]
-    Judge -- 不足 --> Rewrite[7. 查询重写 Rewrite]
+    Judge -- 足够 --> Answer[7. 生成回答 Answer]
+    Judge -- 不足 --> Rewrite[6. 查询重写 Rewrite]
     
-    Rewrite --> Dense
+    Rewrite --> Retrieval
     Answer --> End((结束))
 ```
 
