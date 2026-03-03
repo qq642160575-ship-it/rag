@@ -19,6 +19,8 @@
 
 from agent.core.rag_state import RAGState
 from agent.core.intent import IntentOutput
+from llm.base import DebugHandler
+
 
 def intent_node(state: RAGState, llm_handler, prompt_manager):
     # 在节点内部初始化结构化输出，或者从外部传入
@@ -28,7 +30,7 @@ def intent_node(state: RAGState, llm_handler, prompt_manager):
         "intent", 
         original_question=state["original_question"]
     )
-    result = intent_llm.invoke(messages)
+    result = intent_llm.invoke(messages, config={"callbacks": [DebugHandler()]})
     return {
         "task_type": result.task_type,
         "entities": result.entities

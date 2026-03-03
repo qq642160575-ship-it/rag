@@ -4,6 +4,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, BaseMessage
 from llm.base import BaseLLMHandler
 from dotenv import load_dotenv
+import langchain
 
 load_dotenv()
 
@@ -31,7 +32,6 @@ class GeminiHandler(BaseLLMHandler):
             google_api_key=self.api_key,
             **kwargs
         )
-
     @property
     def model(self) -> ChatGoogleGenerativeAI:
         return self.llm

@@ -4,13 +4,14 @@ from typing import Any, Dict
 from llm.base import BaseLLMHandler
 
 _PROVIDER_CLASSES: Dict[str, str] = {
-    "openai": "llm.providers.OpenAIHandler",
-    "anthropic": "llm.providers.AnthropicHandler",
-    "gemini": "llm.providers.GeminiHandler",
+    "openai": "llm.providers.openai.OpenAIHandler",
+    "anthropic": "llm.providers.anthropic.AnthropicHandler",
+    "gemini": "llm.providers.gemini.GeminiHandler",
 }
 
 def _get_class(path: str):
     import importlib
+    # 路径格式: llm.providers.anthropic.AnthropicHandler
     module_path, class_name = path.rsplit(".", 1)
     module = importlib.import_module(module_path)
     return getattr(module, class_name)

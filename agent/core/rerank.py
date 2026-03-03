@@ -15,7 +15,10 @@
 - 并更新所属目录的 README.md
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class RerankScoreOutput(BaseModel):
-    score: float
+    score: float = Field(
+        default=0.0, 
+        description='重排序后的文档相关性得分'
+    )

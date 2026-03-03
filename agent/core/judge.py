@@ -15,8 +15,14 @@
 - 并更新所属目录的 README.md
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class RecallJudgeOutput(BaseModel):
-    score: float
-    sufficient: bool
+    score: float = Field(
+        default=0.0, 
+        description='召回内容与问题的相关性评分 (0.0-1.0)'
+    )
+    sufficient: bool = Field(
+        default=False, 
+        description='当前召回的内容是否足以回答用户问题'
+    )

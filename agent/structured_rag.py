@@ -217,3 +217,7 @@ class StructuredRAGAgent:
 
     def invoke(self, question: str):
         return self.app.invoke({"original_question": question})
+
+    def draw_workflow(self):
+        from IPython.display import Image, display
+        display(Image(self.app.get_graph().draw_mermaid_png()))

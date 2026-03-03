@@ -4,6 +4,7 @@ from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, BaseMessage
 from llm.base import BaseLLMHandler
 from dotenv import load_dotenv
+import langchain
 
 load_dotenv()
 
@@ -24,13 +25,14 @@ class AnthropicHandler(BaseLLMHandler):
         self.api_key = os.getenv("ANTHROPIC_API_KEY")
         if not self.api_key:
             raise ValueError("未找到环境变量 ANTHROPIC_API_KEY")
-            
+
         self.llm = ChatAnthropic(
             model=model_name,
             temperature=temperature,
             anthropic_api_key=self.api_key,
             **kwargs
         )
+
 
     @property
     def model(self) -> ChatAnthropic:

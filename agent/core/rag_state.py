@@ -22,12 +22,14 @@ from langchain_core.documents import Document
 class RAGState(TypedDict):
     original_question: str
     
-    # Intent analysis
+    # Understanding
     task_type: str
+    need_retrieval: bool
+    expanded_queries: List[str]
+    risk_level: str
     entities: List[str]
     
     # Retrieval
-    expanded_queries: List[str]
     dense_results: List[Document]
     merged_docs: List[Document]
     reranked_docs: List[Document]

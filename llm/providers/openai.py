@@ -4,6 +4,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, BaseMessage
 from llm.base import BaseLLMHandler
 from dotenv import load_dotenv
+import langchain
 
 load_dotenv()
 

@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Generator, Union
 
+from langchain_core.callbacks import BaseCallbackHandler
+
 
 class BaseLLMHandler(ABC):
     """
@@ -36,3 +38,14 @@ class BaseLLMHandler(ABC):
         """
         pass
 
+
+class DebugHandler(BaseCallbackHandler):
+
+    def on_llm_start(self, serialized, prompts, **kwargs):
+        print("\n========== 发送给模型的 Prompt ==========")
+        for p in prompts:
+            print(p)
+
+    def on_llm_end(self, response, **kwargs):
+        print("\n========== 模型原始返回 ==========")
+        print(response)
