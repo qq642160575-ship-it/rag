@@ -9,3 +9,6 @@ pydantic
 langchain-community
 pypdf
 sentence-transformers
+opentelemetry-api
+opentelemetry-sdk
+prometheus-client

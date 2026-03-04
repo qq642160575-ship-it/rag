@@ -17,12 +17,14 @@ pos:
 - 必须同步更新本文件注释
 - 并更新所属目录的 README.md
 """
+import os
 from typing import List, Dict, Any, Optional, Union
 from store.factory import VectorStoreFactory
 
 
 # 全局单例缓存（可选，通常建议由上层业务控制生命周期）
 _instances = {}
+_loaded_paths = set()
 
 
 def get_store(provider: str = "faiss", **kwargs):
@@ -37,15 +39,26 @@ def get_store(provider: str = "faiss", **kwargs):
     return _instances[instance_key]
 
 
+def _ensure_loaded(path: str = "./save", provider: str = "faiss"):
+    """确保数据已加载"""
+    full_path = f"{provider}:{path}"
+    if full_path not in _loaded_paths:
+        store = get_store(provider)
+        if os.path.exists(path):
+            store.load(path)
+            _loaded_paths.add(full_path)
+
+
 def add(
     texts: List[str], 
     vectors: List[List[float]], 
     metadatas: Optional[List[Dict[str, Any]]] = None,
     provider: str = "faiss",
+    path: str = "./save",
     **kwargs
 ) -> List[str]:
     """快捷添加接口"""
-    # 实例化时不带 runtime 参数
+    _ensure_loaded(path, provider)
     store = get_store(provider)
     return store.add(texts, vectors, metadatas, **kwargs)
 
@@ -54,21 +67,24 @@ def search(
     query_vector: List[float], 
     top_k: int = 5, 
     provider: str = "faiss",
+    path: str = "./save",
     **kwargs
 ) -> List[Dict[str, Any]]:
     """快捷检索接口"""
-    # 核心修正：get_store 不要拿走包含 filter 的 kwargs
+    _ensure_loaded(path, provider)
     store = get_store(provider)
     return store.search(query_vector, top_k, **kwargs)
 
 
-def save(path: str, provider: str = "faiss", **kwargs):
+def save(path: str = "./save", provider: str = "faiss", **kwargs):
     """持久化存储"""
-    store = get_store(provider, **kwargs)
+    os.makedirs(path, exist_ok=True)
+    store = get_store(provider)
     store.save(path)
 
 
-def load(path: str, provider: str = "faiss", **kwargs):
+def load(path: str = "./save", provider: str = "faiss", **kwargs):
     """从本地加载"""
-    store = get_store(provider, **kwargs)
+    store = get_store(provider)
     store.load(path)
+    return store

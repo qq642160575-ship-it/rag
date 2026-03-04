@@ -1,34 +1,25 @@
 # store
 
-本目录负责：文本向量的存储、检索与持久化编排。
-不负责：文本向量化（由 embedding 层负责）、数据清洗、业务逻辑分发。
+本目录负责：向量存储与检索
+不负责：文档摄入、向量化、LLM 调用
 
 ## 文件说明
 
 - base.py
-  地位：存储层抽象基座
-  职责：定义 `BaseVectorStore` 接口契约，确保不同引擎的兼容性
+  地位：抽象基类
+  职责：定义 BaseVectorStore 接口
 
 - factory.py
-  地位：实例选择器
-  职责：根据配置动态生产具体的存储引擎实例（如 FAISS）
+  地位：存储工厂
+  职责：分发 Faiss/Milvus 等存储引擎
 
 - vector_store.py
-  地位：存储层唯一对外出口
-  职责：屏蔽底层引擎差异，提供极致简化的单例/快捷操作接口
+  地位：对外唯一入口
+  职责：统一 add/search/save/load 接口
 
-- providers/faiss.py
-  地位：FAISS 引擎驱动实现
-  职责：执行基于 L2 距离的向量检索与本地磁盘持久化
+- providers/
+  地位：具体存储实现
+  职责：Faiss 引擎实现
 
 > 声明：
-> 一旦本目录结构或职责发生变化，请同步更新本文件
-
-## 快速使用
-
-```python
-from store import vector_store
-
-vector_store.add(texts=["Hello"], vectors=[[0.1, 0.2]])
-results = vector_store.search([0.1, 0.21], top_k=1)
-```
+> 一旦本目录结构或职责发生变化，请更新本文件
