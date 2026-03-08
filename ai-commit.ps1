@@ -54,11 +54,6 @@ $Prefix = if (-not [string]::IsNullOrWhiteSpace($ErpId)) { "erp#$ErpId " } else 
 $Prompt = @"
 # ROLE: 资深后端工程师
 # TASK: 根据 git diff 生成高质量的 Git 提交信息。
-# CONSTRAINTS:
-- 语言：中文
-- 规范：符合 Conventional Commits (feat/fix/refactor/chore/docs/style/test)
-- 强制要求：仅输出最终的 commit message 文本，严禁包含解释、分析或 Markdown 代码块。
-- 前缀要求：如果提供前缀，必须将其置于最前方。
 
 # INPUT DATA:
 ## PREFIX: 
@@ -66,6 +61,12 @@ $Prefix
 
 ## GIT DIFF:
 $Diff
+
+# CONSTRAINTS:
+- 语言：中文
+- 规范：符合 Conventional Commits (feat/fix/refactor/chore/docs/style/test)
+- 强制要求：仅输出最终的 commit message 文本，严禁包含解释、分析或 Markdown 代码块。
+- 前缀要求：如果提供前缀，必须将其置于最前方。
 "@
 
 Write-Host "AI 正在生成 commit message..." -ForegroundColor Cyan
@@ -77,13 +78,13 @@ $Headers = @{
 }
 
 $Body = @{
-    model = $Model
-    messages = @(
+    model       = $Model
+    messages    = @(
         @{ role = "user"; content = $Prompt }
     )
-    stream = $false
+    stream      = $false
     temperature = 0.3  # 降低随机性，使输出更符合规范
-    top_p = 0.7
+    top_p       = 0.7
 } | ConvertTo-Json -Depth 10
 
 try {
@@ -93,7 +94,8 @@ try {
     
     # 二次过滤：防止 AI 仍然返回了 ```commit 这种 Markdown 格式
     $Result = $Result -replace '^```\w*\s*', '' -replace '\s*```$', ''
-} catch {
+}
+catch {
     Write-Host "调用 API 失败: $_" -ForegroundColor Red
     exit 1
 }
@@ -112,6 +114,7 @@ $Confirm = Read-Host "使用这个 commit message？ [Y/n]"
 if ([string]::IsNullOrWhiteSpace($Confirm) -or $Confirm -match "^[Yy]$") {
     git commit -m "$Result"
     Write-Host "Commit 完成" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "已取消 commit" -ForegroundColor Yellow
 }

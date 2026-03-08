@@ -54,7 +54,7 @@ def add(
     vectors: List[List[float]], 
     metadatas: Optional[List[Dict[str, Any]]] = None,
     provider: str = "faiss",
-    path: str = "./save",
+    path: str = "./vector_store",
     **kwargs
 ) -> List[str]:
     """快捷添加接口"""
@@ -67,7 +67,7 @@ def search(
     query_vector: List[float], 
     top_k: int = 5, 
     provider: str = "faiss",
-    path: str = "./save",
+    path: str = "./vector_store",
     **kwargs
 ) -> List[Dict[str, Any]]:
     """快捷检索接口"""
@@ -76,14 +76,14 @@ def search(
     return store.search(query_vector, top_k, **kwargs)
 
 
-def save(path: str = "./save", provider: str = "faiss", **kwargs):
+def save(path: str = "./vector_store", provider: str = "faiss", **kwargs):
     """持久化存储"""
     os.makedirs(path, exist_ok=True)
     store = get_store(provider)
     store.save(path)
 
 
-def load(path: str = "./save", provider: str = "faiss", **kwargs):
+def load(path: str = "./vector_store", provider: str = "faiss", **kwargs):
     """从本地加载"""
     store = get_store(provider)
     store.load(path)
